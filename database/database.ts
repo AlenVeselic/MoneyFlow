@@ -155,7 +155,11 @@ const getAll = async (db: SQLiteDatabase, tableName: string) => {
 export const getFlows = async (db: SQLiteDatabase): Promise<any[]> => {
   try {
     const Flows: any[] = [];
-    const queryResults = await db.executeSql('SELECT * FROM Flow');
+    const queryResults = await db.executeSql(
+      `SELECT sum, Category.title AS category, FlowType.title AS flowtype FROM Flow 
+      INNER JOIN FlowType ON Flow.flow_type_id = FlowType.id
+      INNER JOIN Category ON Flow.category_id = Category.id`,
+    );
     queryResults?.forEach(result => {
       for (let index = 0; index < result.rows.length; index++) {
         Flows.push(result.rows.item(index));
@@ -180,7 +184,7 @@ export const createFlow = async (
 
   try {
     const queryResult = await db.executeSql(
-      `INSERT INTO Flow(createdOn, modifiedOn, sum, currency, category_id, flow_type_id) VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO Flow(createdOn, modifiedOn, sum, currency, category_id, flow_type_id) VALUES (?, ?, ?, ?, ?, ?)`,
       [Date.now(), Date.now(), sum, currency, category.id, flowTypeId],
     );
 

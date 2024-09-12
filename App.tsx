@@ -29,6 +29,7 @@ import {
 import {
   connectToDatabase,
   createCategory,
+  createFlow,
   createTables,
   getCategories,
   getFlows,
@@ -40,6 +41,8 @@ import {
   AutocompleteDropdown,
   AutocompleteDropdownContextProvider,
 } from 'react-native-autocomplete-dropdown';
+
+import Icon from 'react-native-vector-icons/AntDesign';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -81,6 +84,7 @@ function App(): React.JSX.Element {
 
   const [selectedCategory, setSelectedCategory] = useState({});
   const [cashAmount, setCashAmount] = useState(0);
+  const [selectedFlowType, setSelectedFlowType] = useState({});
 
   const loadData = React.useCallback(async () => {
     // TODO: Initialize database, add communication with database
@@ -109,6 +113,27 @@ function App(): React.JSX.Element {
     await createCategory(db, title);
 
     refresh();
+  };
+
+  const addFlow = async () => {
+    const db = await connectToDatabase();
+
+    await createFlow(
+      db,
+      cashAmount,
+      selectedCategory.title,
+      selectedFlowType.id,
+    );
+
+    clearFlowInput();
+
+    refresh();
+  };
+
+  const clearFlowInput = () => {
+    setSelectedCategory(0);
+    setSelectedFlowType(0);
+    setCashAmount(0);
   };
 
   const refresh = async () => {
@@ -143,35 +168,10 @@ function App(): React.JSX.Element {
               flows.map(flow => (
                 <View>
                   <Text>
-                    {' '}
-                    {flow.id} - {flow.category_id} - {flow.sum}
+                    {flow.flowtype} - {flow.category} - {flow.sum}€
                   </Text>
                 </View>
               ))}
-            <Text>Flow types</Text>
-
-            {flowTypes &&
-              flowTypes.length > 0 &&
-              flowTypes.map(type => (
-                <View>
-                  <Text>
-                    {type.id} - {type.title}
-                  </Text>
-                </View>
-              ))}
-            <Text>Categories</Text>
-            {flowCategories &&
-              flowCategories.length > 0 &&
-              flowCategories.map(category => (
-                <View>
-                  <Text>
-                    {category.id} - {category.title}
-                  </Text>
-                </View>
-              ))}
-            <View>
-              <Text>Add transaction</Text>
-            </View>
           </View>
         </ScrollView>
         <View
@@ -181,6 +181,52 @@ function App(): React.JSX.Element {
             position: 'absolute',
             bottom: 0,
           }}>
+          <AutocompleteDropdown
+            style={{width: '50%'}}
+            clearOnFocus={false}
+            closeOnBlur={true}
+            closeOnSubmit={false}
+            onSelectItem={setSelectedFlowType}
+            dataSet={flowTypes}
+            textInputProps={{
+              autoCorrect: false,
+              autoCapitalize: 'none',
+              style: {
+                borderRadius: 25,
+                backgroundColor: '#383b42',
+                color: '#fff',
+                paddingLeft: 18,
+              },
+            }}
+            initialValue={{id: '2'}} // or just '2'
+            rightButtonsContainerStyle={{
+              right: 8,
+              height: 30,
+
+              alignSelf: 'center',
+            }}
+            inputContainerStyle={{
+              backgroundColor: '#383b42',
+              borderRadius: 25,
+            }}
+            suggestionsListContainerStyle={{
+              backgroundColor: '#383b42',
+            }}
+            containerStyle={{flexGrow: 2, flexShrink: 1}}
+            renderItem={(item, text) => (
+              <Text style={{color: '#fff', padding: 15}}>{item.title}</Text>
+            )}
+            inputHeight={50}
+            EmptyResultComponent={
+              <TouchableOpacity
+                style={{}}
+                onPress={() => addCategory(searchCategoriesText)}>
+                <Text style={{color: 'white', height: 20, margin: 5}}>
+                  Add "{searchCategoriesText}"?
+                </Text>
+              </TouchableOpacity>
+            }
+          />
           <AutocompleteDropdown
             style={{width: '50%'}}
             clearOnFocus={false}
@@ -235,8 +281,8 @@ function App(): React.JSX.Element {
             placeholder="amount"
             keyboardType="numeric"
           />
-          <TouchableOpacity style={{flexGrow: 1}}>
-            <Text>+</Text>
+          <TouchableOpacity style={{flexGrow: 1}} onPress={() => addFlow()}>
+            <Icon name="plus" size={25} color={'black'}></Icon>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

@@ -1,0 +1,77 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/LibreFranklin-Black.ttf",
+      "sha1": "4b48e2639d95a3777f7a1403194b3b3011398805"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-BlackItalic.ttf",
+      "sha1": "72d103efaf096bfe81775eb3d96343f6977778df"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-Bold.ttf",
+      "sha1": "680d10b4d2baef171396beeadf62e667af7c6238"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-BoldItalic.ttf",
+      "sha1": "d81f52d26f6af3aac7a26b0370c3da6efda259cf"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-ExtraBold.ttf",
+      "sha1": "690e94edd4fb56866353fca611118a429d79bc47"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-ExtraBoldItalic.ttf",
+      "sha1": "22fa9e027e569ac9909867e57d1b2589ee0a87d2"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-ExtraLight.ttf",
+      "sha1": "9edfe8c0cdda98f4ddddd22bd1d0cbe86c092b8f"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-ExtraLightItalic.ttf",
+      "sha1": "506673012884ff1643b80ee0f200a5c7c5703839"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-Italic.ttf",
+      "sha1": "181b33e998b99e9a5aec8d89e20bf5ea6ddab145"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-Light.ttf",
+      "sha1": "58dfcfb6158d6469e9cf3e1ebccce8da4afdd04b"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-LightItalic.ttf",
+      "sha1": "d9e5175878c10fcce727e227a9ae00233a653b86"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-Medium.ttf",
+      "sha1": "43cda50bdffe31f2e460da345eedf54423194317"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-MediumItalic.ttf",
+      "sha1": "1f83893fc847976dca8b98a89aa24d9bc00f4262"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-Regular.ttf",
+      "sha1": "a07d7d3291574c0e8a4d675cff73bf30a218be2f"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-SemiBold.ttf",
+      "sha1": "9833e5481bb4559391efeab02279237ad0005fe9"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-SemiBoldItalic.ttf",
+      "sha1": "9b01af87eae33ff6343482806ba91485566d1d39"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-Thin.ttf",
+      "sha1": "f7ce52e36536c1f186fcc6f29694cd96c86afc99"
+    },
+    {
+      "path": "assets/fonts/LibreFranklin-ThinItalic.ttf",
+      "sha1": "cd9cd135d3bf55bdfc6ea68c2e4dddce1f818592"
+    }
+  ]
+}
