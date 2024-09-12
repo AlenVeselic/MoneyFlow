@@ -213,7 +213,7 @@ function App(): React.JSX.Element {
             suggestionsListContainerStyle={{
               backgroundColor: '#383b42',
             }}
-            containerStyle={{flexGrow: 1, flexShrink: 1}}
+            containerStyle={{flexGrow: 2, flexShrink: 1}}
             renderItem={(item, text) => (
               <Text style={{color: '#fff', padding: 15}}>{item.title}</Text>
             )}
@@ -229,12 +229,13 @@ function App(): React.JSX.Element {
             }
           />
           <TextInput
+            style={{flexGrow: 1}}
             onChangeText={setCashAmount}
             value={cashAmount}
             placeholder="amount"
             keyboardType="numeric"
           />
-          <TouchableOpacity>
+          <TouchableOpacity style={{flexGrow: 1}}>
             <Text>+</Text>
           </TouchableOpacity>
         </View>
