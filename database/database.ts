@@ -212,7 +212,7 @@ const getCategory = async (db: SQLiteDatabase, title: string): Promise<any> => {
   return createdCategory;
 };
 
-const createCategory = async (
+export const createCategory = async (
   db: SQLiteDatabase,
   title: string,
 ): Promise<void> => {

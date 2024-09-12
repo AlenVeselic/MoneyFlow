@@ -13,6 +13,8 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
+  TouchableOpacity,
   useColorScheme,
   View,
 } from 'react-native';
@@ -26,6 +28,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import {
   connectToDatabase,
+  createCategory,
   createTables,
   getCategories,
   getFlows,
@@ -33,6 +36,10 @@ import {
   getTableNames,
   seedTables,
 } from './database/database';
+import {
+  AutocompleteDropdown,
+  AutocompleteDropdownContextProvider,
+} from 'react-native-autocomplete-dropdown';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -70,6 +77,10 @@ function App(): React.JSX.Element {
   const [flowTypes, setFlowTypes] = useState<any[]>([]);
   const [flowCategories, setFlowCategories] = useState<any[]>([]);
   const [flows, setFlows] = useState<any[]>([]);
+  const [searchCategoriesText, setSearchCategoriesText] = useState<String>('');
+
+  const [selectedCategory, setSelectedCategory] = useState({});
+  const [cashAmount, setCashAmount] = useState(0);
 
   const loadData = React.useCallback(async () => {
     // TODO: Initialize database, add communication with database
@@ -92,61 +103,143 @@ function App(): React.JSX.Element {
     loadData();
   }, [loadData]);
 
+  const addCategory = async title => {
+    const db = await connectToDatabase();
+
+    await createCategory(db, title);
+
+    refresh();
+  };
+
+  const refresh = async () => {
+    const db = await connectToDatabase();
+
+    setFlowTypes(await getFlowTypes(db));
+    setFlowCategories(await getCategories(db));
+    setFlows(await getFlows(db));
+  };
+
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
+    <AutocompleteDropdownContextProvider>
+      <SafeAreaView style={[backgroundStyle, {minHeight: '50%'}]}>
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={backgroundStyle.backgroundColor}
+        />
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          style={backgroundStyle}>
+          <View
+            style={{
+              backgroundColor: isDarkMode ? Colors.black : Colors.white,
+            }}>
+            <Text>Transactions</Text>
+            {flows &&
+              flows.length > 0 &&
+              flows.map(flow => (
+                <View>
+                  <Text>
+                    {' '}
+                    {flow.id} - {flow.category_id} - {flow.sum}
+                  </Text>
+                </View>
+              ))}
+            <Text>Flow types</Text>
+
+            {flowTypes &&
+              flowTypes.length > 0 &&
+              flowTypes.map(type => (
+                <View>
+                  <Text>
+                    {type.id} - {type.title}
+                  </Text>
+                </View>
+              ))}
+            <Text>Categories</Text>
+            {flowCategories &&
+              flowCategories.length > 0 &&
+              flowCategories.map(category => (
+                <View>
+                  <Text>
+                    {category.id} - {category.title}
+                  </Text>
+                </View>
+              ))}
+            <View>
+              <Text>Add transaction</Text>
+            </View>
+          </View>
+        </ScrollView>
         <View
           style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
+            display: 'flex',
+            flexDirection: 'row',
+            position: 'absolute',
+            bottom: 0,
           }}>
-          <Text>Transactions</Text>
-          {flows &&
-            flows.length > 0 &&
-            flows.map(flow => (
-              <View>
-                <Text>
-                  {' '}
-                  {flow.id} - {flow.category_id} - {flow.sum}
-                </Text>
-              </View>
-            ))}
-          <Text>Flow types</Text>
+          <AutocompleteDropdown
+            style={{width: '50%'}}
+            clearOnFocus={false}
+            closeOnBlur={true}
+            closeOnSubmit={false}
+            onChangeText={setSearchCategoriesText}
+            onSelectItem={setSelectedCategory}
+            dataSet={flowCategories}
+            textInputProps={{
+              autoCorrect: false,
+              autoCapitalize: 'none',
+              style: {
+                borderRadius: 25,
+                backgroundColor: '#383b42',
+                color: '#fff',
+                paddingLeft: 18,
+              },
+            }}
+            initialValue={{id: '2'}} // or just '2'
+            rightButtonsContainerStyle={{
+              right: 8,
+              height: 30,
 
-          {flowTypes &&
-            flowTypes.length > 0 &&
-            flowTypes.map(type => (
-              <View>
-                <Text>
-                  {type.id} - {type.title}
+              alignSelf: 'center',
+            }}
+            inputContainerStyle={{
+              backgroundColor: '#383b42',
+              borderRadius: 25,
+            }}
+            suggestionsListContainerStyle={{
+              backgroundColor: '#383b42',
+            }}
+            containerStyle={{flexGrow: 1, flexShrink: 1}}
+            renderItem={(item, text) => (
+              <Text style={{color: '#fff', padding: 15}}>{item.title}</Text>
+            )}
+            inputHeight={50}
+            EmptyResultComponent={
+              <TouchableOpacity
+                style={{}}
+                onPress={() => addCategory(searchCategoriesText)}>
+                <Text style={{color: 'white', height: 20, margin: 5}}>
+                  Add "{searchCategoriesText}"?
                 </Text>
-              </View>
-            ))}
-          <Text>Categories</Text>
-          {flowCategories &&
-            flowCategories.length > 0 &&
-            flowCategories.map(category => (
-              <View>
-                <Text>
-                  {category.id} - {category.title}
-                </Text>
-              </View>
-            ))}
-          <View>
-            <Text>Add transaction</Text>
-          </View>
+              </TouchableOpacity>
+            }
+          />
+          <TextInput
+            onChangeText={setCashAmount}
+            value={cashAmount}
+            placeholder="amount"
+            keyboardType="numeric"
+          />
+          <TouchableOpacity>
+            <Text>+</Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </AutocompleteDropdownContextProvider>
   );
 }
 
