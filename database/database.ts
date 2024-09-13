@@ -156,7 +156,7 @@ export const getFlows = async (db: SQLiteDatabase): Promise<any[]> => {
   try {
     const Flows: any[] = [];
     const queryResults = await db.executeSql(
-      `SELECT sum, Category.title AS category, FlowType.title AS flowtype FROM Flow 
+      `SELECT Flow.createdOn, sum, Category.title AS category, FlowType.title AS flowtype FROM Flow 
       INNER JOIN FlowType ON Flow.flow_type_id = FlowType.id
       INNER JOIN Category ON Flow.category_id = Category.id`,
     );
@@ -170,6 +170,31 @@ export const getFlows = async (db: SQLiteDatabase): Promise<any[]> => {
   } catch (error) {
     console.error(error);
     throw Error('Failed to get flows from database');
+  }
+};
+
+export const getFlowsForToday = async (db: SQLiteDatabase): Promise<any[]> => {
+  try {
+    const Flows: any[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const allFlows = await getFlows(db);
+    allFlows?.forEach(flow => {
+      const currentFlowDate = new Date(flow.createdOn);
+      currentFlowDate.setHours(0, 0, 0, 0);
+
+      console.log(currentFlowDate.getTime(), '==', today.getTime());
+      console.log(currentFlowDate.getTime() == today.getTime());
+
+      if (currentFlowDate.getTime() == today.getTime()) Flows.push(flow);
+    });
+
+    return Flows;
+  } catch (error) {
+    console.error(error);
+    console.error('Failed to get todays flows from database');
+    return [];
   }
 };
 
