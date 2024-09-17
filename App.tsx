@@ -88,7 +88,7 @@ function App(): React.JSX.Element {
   const [searchCategoriesText, setSearchCategoriesText] = useState<String>('');
 
   const [selectedCategory, setSelectedCategory] = useState({});
-  const [cashAmount, setCashAmount] = useState(0);
+  const [cashAmount, setCashAmount] = useState('');
   const [selectedFlowType, setSelectedFlowType] = useState({});
 
   const loadData = React.useCallback(async () => {
@@ -335,11 +335,11 @@ function App(): React.JSX.Element {
                   paddingHorizontal: 2,
                   textAlign: 'center',
                 }}
-                onChangeText={setCashAmount}
+                onChangeText={value => setCashAmount(value.replace(',', '.'))}
                 value={cashAmount}
                 placeholder="€"
                 placeholderTextColor={'white'}
-                keyboardType="numeric"
+                inputMode="decimal"
               />
             </View>
             <TouchableOpacity
