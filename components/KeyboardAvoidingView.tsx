@@ -13,12 +13,10 @@ export const KeyboardAvoidingViewWithoutWhitespace = (
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
-      console.log('Will show');
       setEnabled(true);
     });
 
     const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-      console.log('Will hide');
       setEnabled(false);
     });
 
