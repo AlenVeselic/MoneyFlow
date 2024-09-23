@@ -6,9 +6,7 @@
  */
 
 import React, {useEffect, useState} from 'react';
-import type {PropsWithChildren} from 'react';
 import {
-  KeyboardAvoidingView,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -46,36 +44,7 @@ import {
 } from 'react-native-autocomplete-dropdown';
 
 import Icon from 'react-native-vector-icons/AntDesign';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import {KeyboardAvoidingViewWithoutWhitespace} from './components/KeyboardAvoidingView';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -152,8 +121,8 @@ function App(): React.JSX.Element {
   };
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-    height: (useWindowDimensions().height * 95) / 100,
+    backgroundColor: 'black',
+    height: (useWindowDimensions().height * 100) / 100,
   };
 
   return (
@@ -183,43 +152,33 @@ function App(): React.JSX.Element {
                 justifyContent: 'center',
                 height: '100%',
               }}>
-              <Text>Transactions</Text>
-              {flows &&
-                flows.length > 0 &&
-                flows.map(flow => (
-                  <View>
-                    <Text>
-                      {flow.flowtype} - {flow.category} - {flow.sum}€
-                    </Text>
-                  </View>
-                ))}
-
-              <Text>
-                Total{' '}
-                {flows.reduce((prev, flow) => prev + parseFloat(flow.sum), 0)}
+              <Text style={{marginTop: 5, fontSize: 20}}>
+                Today's transactions
               </Text>
-
-              <Text style={{marginTop: 5}}>Todays transactions</Text>
               {todaysFlows &&
                 todaysFlows.length > 0 &&
                 todaysFlows.map(flow => (
                   <View>
-                    <Text>
-                      {flow.flowtype} - {flow.category} - {flow.sum}€
+                    <Text style={{fontSize: 20}}>
+                      {flow.category} | {flow.flowtype == 'income' ? '+' : ''}
+                      {flow.flowtype == 'expense' ? '-' : ''}
+                      {flow.sum}€
                     </Text>
                   </View>
                 ))}
-              <Text>
-                Total{' '}
-                {todaysFlows.reduce(
-                  (prev, flow) => prev + parseFloat(flow.sum),
-                  0,
-                )}
+              <Text style={{fontSize: 20}}>
+                Total &nbsp;
+                {todaysFlows
+                  .reduce((prev, flow) => prev + parseFloat(flow.sum), 0)
+                  .toFixed(2)}
+                €
               </Text>
             </View>
           </View>
         </ScrollView>
-        <KeyboardAvoidingView behavior="position" keyboardVerticalOffset={100}>
+        <KeyboardAvoidingViewWithoutWhitespace
+          behavior="position"
+          keyboardVerticalOffset={100}>
           <View
             style={{
               display: 'flex',
@@ -229,6 +188,7 @@ function App(): React.JSX.Element {
               padding: 5,
               width: '100%',
               alignItems: 'center',
+              backgroundColor: 'black',
             }}>
             <View
               style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
@@ -350,13 +310,14 @@ function App(): React.JSX.Element {
                 justifyContent: 'center',
                 marginVertical: 5,
                 backgroundColor: '#383b42',
-                borderRadius: 25,
+                borderRadius: 30,
+                padding: 5,
               }}
               onPress={() => addFlow()}>
-              <Icon name="plus" size={50} color={'white'}></Icon>
+              <Icon name="plus" size={40} color={'white'}></Icon>
             </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoidingViewWithoutWhitespace>
       </SafeAreaView>
     </AutocompleteDropdownContextProvider>
   );
