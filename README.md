@@ -106,3 +106,11 @@ In order for the changes to not be cached by Android also bump the version in `.
 The versions to be bumped are `versionCode` and `versionName`.
 
 The apk is built into the following directory: `./android/app/outputs/apk/debug` as `app-debug.apk`
+
+## Clean up codegen
+
+cd android
+./gradlew clean
+cd ..
+rm -rf android/app/build
+rm -rf android/build

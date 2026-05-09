@@ -1,32 +1,25 @@
 // app/db/db.ts
 
-import {
-  SQLiteDatabase,
-  enablePromise,
-  openDatabase,
-} from 'react-native-sqlite-storage';
-
-// Enable promise for SQLite
-enablePromise(true);
+import {NitroSQLiteConnection, open} from 'react-native-nitro-sqlite';
 
 export const connectToDatabase = async () => {
-  return openDatabase(
+  return open(
     {name: 'MoneyFlow.db'},
-    () => {},
-    error => {
-      console.error(error);
-      throw Error('Could not connect to database');
-    },
+    // () => {},
+    // error => {
+    //   console.error(error);
+    //   throw Error('Could not connect to database');
+    // },
   );
 };
 
-export const createTables = async (db: SQLiteDatabase) => {
+export const createTables = async (db: NitroSQLiteConnection) => {
   const databaseInitiationCommands = [
     `
     CREATE TABLE IF NOT EXISTS Category (
       id INTEGER PRIMARY KEY,
-      createdOn INTEGER DEFAULT (strftime('%s','now')),
-      modifiedOn INTEGER DEFAULT (strftime('%s','now')),
+      createdOn INTEGER default (strftime('%s', 'now')),
+      modifiedOn INTEGER default (strftime('%s', 'now')),
 
       title VARCHAR(255) NOT NULL
   );
@@ -34,20 +27,22 @@ export const createTables = async (db: SQLiteDatabase) => {
     `
       CREATE TABLE IF NOT EXISTS FlowType (
         id INTEGER PRIMARY KEY,
-        createdOn INTEGER DEFAULT (strftime('%s','now')),
-        modifiedOn INTEGER DEFAULT (strftime('%s','now')),
-  
+        createdOn INTEGER default (strftime('%s', 'now')),
+        modifiedOn INTEGER default (strftime('%s', 'now')),
+
         title VARCHAR(255) NOT NULL
     );
         `,
     ` 
         CREATE TABLE IF NOT EXISTS Flow(
           id INTEGER PRIMARY KEY,
-          createdOn INTEGER DEFAULT (strftime('%s','now')),
-          modifiedOn INTEGER DEFAULT (strftime('%s','now')),
+          createdOn INTEGER default (strftime('%s', 'now')),
+          modifiedOn INTEGER default (strftime('%s', 'now')),
 
+          flowDate INTEGER default (strftime('%s', 'now')),
           sum INTEGER NOT NULL,
           currency  VARCHAR(255) NOT NULL,
+          description TEXT NULL,
           category_id INTEGER NOT NULL,
           flow_type_id INTEGER NOT NULL,
 
@@ -59,7 +54,7 @@ export const createTables = async (db: SQLiteDatabase) => {
   ];
   try {
     for (let command of databaseInitiationCommands) {
-      await db.executeSql(command);
+      await db.executeAsync(command);
     }
   } catch (error) {
     console.error(error);
@@ -67,45 +62,45 @@ export const createTables = async (db: SQLiteDatabase) => {
   }
 };
 
-export const seedTables = async (db: SQLiteDatabase) => {
+export const seedTables = async (db: NitroSQLiteConnection) => {
   await seedFlowTypes(db);
   await seedCategories(db);
 };
 
-export const seedFlowTypes = async (db: SQLiteDatabase) => {
+export const seedFlowTypes = async (db: NitroSQLiteConnection) => {
   const flowTypes = ['income', 'expense'];
 
   flowTypes.forEach(async type => {
-    const searchForFlowType = await db.executeSql(
+    const {results: searchForFlowType} = await db.executeAsync(
       'SELECT * FROM FlowType WHERE title=?',
       [type],
     );
 
-    if (searchForFlowType[0].rows.length <= 0) {
-      const insertResult = await db.executeSql(
+    if (searchForFlowType.length <= 0) {
+      const {results: insertResult} = await db.executeAsync(
         `INSERT INTO FlowType(createdOn, modifiedOn, title) VALUES (?, ?, ?)`,
-        [Date.now(), Date.now(), type],
+        [Date.now() / 1000, Date.now() / 1000, type],
       );
     }
   });
 };
 
-export const seedCategories = async (db: SQLiteDatabase) => {
+export const seedCategories = async (db: NitroSQLiteConnection) => {
   const defaultCategories = ['Groceries', 'Bills', 'Food', 'Drinks'];
 
   defaultCategories.forEach(async category => await getCategory(db, category));
 };
 
-export const getTableNames = async (db: SQLiteDatabase): Promise<string[]> => {
+export const getTableNames = async (
+  db: NitroSQLiteConnection,
+): Promise<string[]> => {
   try {
     const tableNames: string[] = [];
-    const results = await db.executeSql(
+    const {results} = await db.executeAsync(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
     );
     results?.forEach(result => {
-      for (let index = 0; index < result.rows.length; index++) {
-        tableNames.push(result.rows.item(index).name);
-      }
+      tableNames.push(result.name);
     });
     return tableNames;
   } catch (error) {
@@ -114,14 +109,14 @@ export const getTableNames = async (db: SQLiteDatabase): Promise<string[]> => {
   }
 };
 
-export const getCategories = async (db: SQLiteDatabase) => {
+export const getCategories = async (db: NitroSQLiteConnection) => {
   try {
     const categories: any[] = [];
-    const queryResults = await db.executeSql('SELECT * FROM Category');
+    const {results: queryResults} = await db.executeAsync(
+      'SELECT * FROM Category',
+    );
     queryResults?.forEach(result => {
-      for (let index = 0; index < result.rows.length; index++) {
-        categories.push(result.rows.item(index));
-      }
+      categories.push(result);
     });
 
     return categories;
@@ -131,18 +126,20 @@ export const getCategories = async (db: SQLiteDatabase) => {
   }
 };
 
-export const getFlowTypes = async (db: SQLiteDatabase): Promise<any[]> => {
+export const getFlowTypes = async (
+  db: NitroSQLiteConnection,
+): Promise<any[]> => {
   return await getAll(db, 'FlowType');
 };
 
-const getAll = async (db: SQLiteDatabase, tableName: string) => {
+const getAll = async (db: NitroSQLiteConnection, tableName: string) => {
   try {
     const entities: any[] = [];
-    const queryResults = await db.executeSql(`SELECT * FROM ${tableName}`);
+    const {results: queryResults} = await db.executeAsync(
+      `SELECT * FROM ${tableName}`,
+    );
     queryResults?.forEach(result => {
-      for (let index = 0; index < result.rows.length; index++) {
-        entities.push(result.rows.item(index));
-      }
+      entities.push(result);
     });
 
     return entities;
@@ -152,19 +149,31 @@ const getAll = async (db: SQLiteDatabase, tableName: string) => {
   }
 };
 
-export const getFlows = async (db: SQLiteDatabase): Promise<any[]> => {
+export const getFlows = async (
+  db: NitroSQLiteConnection,
+  date?: Date,
+): Promise<any[]> => {
   try {
     const Flows: any[] = [];
-    const queryResults = await db.executeSql(
-      `SELECT Flow.createdOn, sum, Category.title AS category, FlowType.title AS flowtype FROM Flow 
-      INNER JOIN FlowType ON Flow.flow_type_id = FlowType.id
-      INNER JOIN Category ON Flow.category_id = Category.id`,
+    let query = `SELECT CAST(F.createdOn AS TEXT) AS createdOn, F.modifiedOn AS modifiedOn, F.flowDate, date( CAST(F.flowDate AS TEXT), 'unixepoch') AS flowDateAsDate, date( CAST( ? AS TEXT), 'unixepoch') AS passedDateConverted, F.sum AS sum, Category.title AS category, FlowType.title AS flowtype FROM Flow as F 
+      LEFT JOIN FlowType ON F.flow_type_id = FlowType.id
+      LEFT JOIN Category ON F.category_id = Category.id`;
+
+    if (date) {
+      query += ` WHERE date( CAST(F.flowDate AS TEXT), 'unixepoch') > date( CAST( ? AS TEXT), 'unixepoch')`;
+    }
+    const {results: queryResults} = await db.executeAsync(
+      query,
+      date ? [date.getTime() / 1000, date.getTime() / 1000] : [],
     );
     queryResults?.forEach(result => {
-      for (let index = 0; index < result.rows.length; index++) {
-        Flows.push(result.rows.item(index));
-      }
+      Flows.push(result);
     });
+
+    // console.log('Date for flow query:', date ? date.getTime() / 1000 : null);
+    // console.log('Query for flows:', query);
+
+    console.log('Flows', Flows);
 
     return Flows;
   } catch (error) {
@@ -173,24 +182,26 @@ export const getFlows = async (db: SQLiteDatabase): Promise<any[]> => {
   }
 };
 
-export const getFlowsForToday = async (db: SQLiteDatabase): Promise<any[]> => {
+export const getFlowsForToday = async (
+  db: NitroSQLiteConnection,
+): Promise<any[]> => {
   try {
-    const Flows: any[] = [];
+    const flows: any[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const allFlows = await getFlows(db);
-    allFlows?.forEach(flow => {
-      const currentFlowDate = new Date(flow.createdOn);
-      currentFlowDate.setHours(0, 0, 0, 0);
+    const allFlows = await getFlows(db, today);
+    // allFlows?.forEach(flow => {
+    //   const currentFlowDate = new Date(flow.flowDateAsDate);
+    //   currentFlowDate.setHours(0, 0, 0, 0);
 
-      console.log(currentFlowDate.getTime(), '==', today.getTime());
-      console.log(currentFlowDate.getTime() == today.getTime());
+    //   console.log(currentFlowDate.getTime(), '==', today.getTime());
+    //   console.log(currentFlowDate.getTime() == today.getTime());
 
-      if (currentFlowDate.getTime() == today.getTime()) Flows.push(flow);
-    });
+    //   if (currentFlowDate.getTime() == today.getTime()) flows.push(flow);
+    // });
 
-    return Flows;
+    return allFlows;
   } catch (error) {
     console.error(error);
     console.error('Failed to get todays flows from database');
@@ -199,63 +210,105 @@ export const getFlowsForToday = async (db: SQLiteDatabase): Promise<any[]> => {
 };
 
 export const createFlow = async (
-  db: SQLiteDatabase,
+  db: NitroSQLiteConnection,
   sum: number,
   categoryTitle: string,
   flowTypeId: number,
+  description?: string,
+  flowDate?: Date,
 ): Promise<void> => {
-  const category = await getCategory(db, categoryTitle);
+  let category = await getCategory(db, categoryTitle);
   const currency = 'EUR';
-
+  console.log('Creating flow with category:', category);
   try {
-    const queryResult = await db.executeSql(
-      `INSERT INTO Flow(createdOn, modifiedOn, sum, currency, category_id, flow_type_id) VALUES (?, ?, ?, ?, ?, ?)`,
-      [Date.now(), Date.now(), sum, currency, category.id, flowTypeId],
+    if (category.length > 0) {
+      category = category[0];
+    }
+    console.log(
+      'Parameters for flow creation: ',
+      Date.now() / 1000,
+      Date.now() / 1000,
+      sum,
+      currency,
+      category,
+      flowTypeId,
+      description,
+      flowDate ? flowDate.getTime() / 1000 : null,
+    );
+    const {results: queryResult, rowsAffected} = await db.executeAsync(
+      `INSERT INTO Flow(createdOn, modifiedOn, sum, currency, category_id, flow_type_id, description, flowDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        Date.now() / 1000,
+        Date.now() / 1000,
+        sum,
+        currency,
+        category,
+        flowTypeId,
+        description,
+        flowDate ? flowDate.getTime() / 1000 : null,
+      ],
     );
 
-    return queryResult[0].rows.item(0);
+    // console.log(queryResult);
+    // console.log(rowsAffected);
+    return;
   } catch (error) {
     console.error(error);
     throw Error('Failed to create transaction');
   }
 };
 
-const getCategory = async (db: SQLiteDatabase, title: string): Promise<any> => {
-  const categoryExists = await db.executeSql(
-    `SELECT id FROM category WHERE title = ?`,
-    [title.toLowerCase()],
+const getCategory = async (
+  db: NitroSQLiteConnection,
+  title: string,
+): Promise<any> => {
+  console.log('Getting category with title:', title);
+  const {results: categoryExists} = await db.executeAsync(
+    `SELECT id FROM category WHERE title = ? LIMIT 1`,
+    [title],
   );
 
-  if (categoryExists && categoryExists[0].rows.length > 0)
-    return categoryExists[0].rows.item(0);
+  console.log('Category exists:', categoryExists);
+
+  if (categoryExists && categoryExists?.length > 0) return categoryExists[0].id;
+
+  console.log('Creating category with title:', title);
 
   // If the category doesn't exist, create it
-  await createCategory(db, title);
+  return await createCategory(db, title);
 
   // Since this package doesn't support returning, we query the database again after the category is created
-  const createdCategory = await db.executeSql(
-    `SELECT id FROM category WHERE title = ?`,
-    [title.toLowerCase()],
-  );
+  // const {results: createdCategory} = await db.executeAsync(
+  //   `SELECT id FROM category WHERE title = ? RETURNING id`,
+  //   [title.toLowerCase()],
+  // );
 
-  return createdCategory;
+  // return createdCategory;
 };
 
 export const createCategory = async (
-  db: SQLiteDatabase,
+  db: NitroSQLiteConnection,
   title: string,
-): Promise<void> => {
-  const creationResult = await db.executeSql(
-    'INSERT INTO Category(createdOn, modifiedOn, title) VALUES (?, ?, ?)',
-    [Date.now(), Date.now(), title.toLowerCase()],
+): Promise<any> => {
+  const {results: creationResult, rowsAffected} = await db.executeAsync(
+    'INSERT INTO Category(createdOn, modifiedOn, title) VALUES (?, ?, ?) RETURNING id',
+    [Date.now() / 1000, Date.now() / 1000, title],
   );
+
+  console.log('Category created:', creationResult);
+  console.log('Rows affected:', rowsAffected);
+
+  return creationResult.id;
 };
 // Code from example
 
-export const removeTable = async (db: SQLiteDatabase, tableName: Table) => {
+export const removeTable = async (
+  db: NitroSQLiteConnection,
+  tableName: string,
+) => {
   const query = `DROP TABLE IF EXISTS ${tableName}`;
   try {
-    await db.executeSql(query);
+    await db.executeAsync(query);
   } catch (error) {
     console.error(error);
     throw Error(`Failed to drop table ${tableName}`);
